@@ -41,6 +41,8 @@ const Profile = () => {
     try {
       const res = await axios.get(`http://${Rest_API}:9000/usersroute/profile/${userId}`);
       setUser(res.data);
+      console.log(`http://${Rest_API}:9000/${res.data.image}`);
+
     } catch (err) {
       Alert.alert('Error', 'Failed to fetch profile data');
     }
@@ -65,14 +67,14 @@ const Profile = () => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
             <MaterialIcons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.editButton}
             onPress={() => navigation.navigate('EditProfile')}
           >
@@ -84,9 +86,18 @@ const Profile = () => {
         <View style={styles.profileImageContainer}>
           <View style={styles.imageWrapper}>
             <Image
-              source={user.image ? { uri: user.image } : require('../../Assets/Profile.png')}
+              source={
+                user.AuthType === 'EmailWithPassword'
+                  ? user.image
+                    ? { uri: `http://${Rest_API}:9000/${user.image}` }
+                    : require('../../Assets/Profile.png')
+                  : user.image
+                    ? { uri: user.image }
+                    : require('../../Assets/Profile.png')
+              }
               style={styles.profileImage}
             />
+
           </View>
           <Text style={styles.userName}>{user.name}</Text>
           <Text style={styles.userEmail}>{user.email}</Text>
@@ -147,7 +158,7 @@ const Profile = () => {
 
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('MyCertificates')}
           >
@@ -155,7 +166,7 @@ const Profile = () => {
             <Text style={styles.actionButtonText}>My Certificates</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate('TestHistory')}
           >
@@ -165,7 +176,7 @@ const Profile = () => {
         </View>
 
         {/* Logout Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.logoutButton}
           onPress={handleLogout}
         >
@@ -287,7 +298,7 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    gap:10,
+    gap: 10,
     marginHorizontal: wp('1%'),
     marginBottom: hp('4%'),
   },

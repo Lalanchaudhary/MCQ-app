@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,36 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'react-native-image-picker';
 import axios from 'axios';
 import Rest_API from '../../Api';
-const AddTest = ({ navigation }) => {
+
+const EditTest = ({ route, navigation }) => {
+  const { testId } = route.params;
   const [testName, setTestName] = useState('');
   const [testLogo, setTestLogo] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [duration, setDuration] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTestDetails();
+  }, []);
+
+  const fetchTestDetails = async () => {
+    try {
+      const res = await axios.get(`http://${Rest_API}:9000/testroute/gettest/${testId}`);
+      const test = res.data;
+      setTestName(test.name);
+      setDuration(test.duration.toString());
+      setQuestions(test.questions);
+      if (test.image) {
+        setTestLogo(test.image);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching test details:', error);
+      Alert.alert('Error', 'Failed to load test details');
+      navigation.goBack();
+    }
+  };
 
   const addQuestion = () => {
     setQuestions([
@@ -61,7 +86,7 @@ const AddTest = ({ navigation }) => {
     );
   };
 
-  const saveTest = async () => {
+  const updateTest = async () => {
     if (!testName.trim()) {
       Alert.alert('Error', 'Please enter a test name');
       return;
@@ -97,7 +122,7 @@ const AddTest = ({ navigation }) => {
     formData.append('duration', parseInt(duration));
     formData.append('questions', JSON.stringify(questions));
   
-    if (testLogo) {
+    if (testLogo && typeof testLogo === 'string' && testLogo.startsWith('file://')) {
       const filename = testLogo.split('/').pop();
       const type = `image/${filename.split('.').pop()}`;
   
@@ -109,8 +134,8 @@ const AddTest = ({ navigation }) => {
     }
   
     try {
-      const res = await axios.post(
-        `http://${Rest_API}:9000/testroute/addtest`,
+      const res = await axios.put(
+        `http://${Rest_API}:9000/testroute/updatetest/${testId}`,
         formData,
         {
           headers: {
@@ -118,21 +143,28 @@ const AddTest = ({ navigation }) => {
           },
         }
       );
-      console.log("Test created successfully =", res.data);
-      Alert.alert("Success", "Test created successfully");
+      console.log("Test updated successfully =", res.data);
+      Alert.alert("Success", "Test updated successfully");
       navigation.goBack();
     } catch (error) {
-      console.error('Error saving test:', error);
-      Alert.alert('Error', 'Failed to save test');
+      console.error('Error updating test:', error);
+      Alert.alert('Error', 'Failed to update test');
     }
   };
-  
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.headerText}>Add New Test</Text>
+          <Text style={styles.headerText}>Edit Test</Text>
         </View>
 
         <View style={styles.form}>
@@ -165,7 +197,7 @@ const AddTest = ({ navigation }) => {
               ) : (
                 <View style={styles.imagePlaceholder}>
                   <Icon name="add-photo-alternate" size={40} color="#666" />
-                  <Text style={styles.imagePlaceholderText}>Add Logo</Text>
+                  <Text style={styles.imagePlaceholderText}>Change Logo</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -227,8 +259,8 @@ const AddTest = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      <TouchableOpacity style={styles.saveButton} onPress={saveTest}>
-        <Text style={styles.saveButtonText}>Save Test</Text>
+      <TouchableOpacity style={styles.saveButton} onPress={updateTest}>
+        <Text style={styles.saveButtonText}>Update Test</Text>
       </TouchableOpacity>
     </View>
   );
@@ -238,6 +270,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
@@ -392,4 +429,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddTest; 
+export default EditTest; 

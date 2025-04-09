@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -18,10 +18,28 @@ const ProfileImage = ({route }) => {
   console.log(formData);
   console.log('====================================');
   const [photo, setPhoto] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigation=useNavigation();
   // Function to pick an image
   const choosePhoto = () => {
-    launchImageLibrary({ mediaType: 'photo' }, (response) => {
+    launchImageLibrary({ 
+      mediaType: 'photo',
+      includeBase64: true,
+      quality: 0.8,
+      maxWidth: 800,
+      maxHeight: 800,
+    }, (response) => {
+      if (response.didCancel) {
+        return;
+      }
+      if (response.error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to select image',
+        });
+        return;
+      }
       if (response.assets && response.assets.length > 0) {
         setPhoto(response.assets[0].uri);
       }
@@ -29,6 +47,16 @@ const ProfileImage = ({route }) => {
   };
 
   const HandleWithPhoto = async () => {
+    if (!photo) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please select a profile photo',
+      });
+      return;
+    }
+
+    setLoading(true);
     const userId = await AsyncStorage.getItem('userId');
   
     const data = new FormData();
@@ -38,14 +66,12 @@ const ProfileImage = ({route }) => {
       data.append(key, formData[key]);
     });
   
-    // Append image only if selected
-    if (photo) {
-      data.append('profileImage', {
-        uri: photo,
-        name: 'profile.jpg', // or extract from photo itself if needed
-        type: 'image/jpeg',
-      });
-    }
+    // Append image
+    data.append('profileImage', {
+      uri: photo,
+      name: 'profile.jpg',
+      type: 'image/jpeg',
+    });
   
     try {
       const res = await axios.put(`http://${Rest_API}:9000/usersroute/setup/${userId}`, data, {
@@ -57,7 +83,7 @@ const ProfileImage = ({route }) => {
       Toast.show({
         type: 'success',
         text1: 'Success',
-        text2: 'User Registered Successfully',
+        text2: 'Profile updated successfully',
       });
   
       navigation.navigate('Dashboard');
@@ -65,28 +91,34 @@ const ProfileImage = ({route }) => {
       Toast.show({
         type: 'error',
         text1: 'Upload Error',
-        text2: error.message || 'Something went wrong',
+        text2: error.response?.data?.message || 'Failed to update profile',
       });
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
   
 
   const HandleLater=async()=>{
+    setLoading(true);
     const userId = await AsyncStorage.getItem('userId');
     try{
       const res=await axios.put(`http://${Rest_API}:9000/usersroute/setup/${userId}`,formData)
             Toast.show({
               type: 'success',
               text1: 'Success',
-              text2: 'User Register Successfully'
+              text2: 'Profile updated successfully'
             });
       navigation.navigate('Dashboard');
     }catch(err){
       Toast.show({
         type: 'error',
-        text1: 'Login Error',
-        text2: error.message || 'Something went wrong'
+        text1: 'Error',
+        text2: err.response?.data?.message || 'Failed to update profile'
       });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -107,6 +139,7 @@ const ProfileImage = ({route }) => {
       <TouchableOpacity 
         style={[styles.imageContainer, { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }]} 
         onPress={choosePhoto}
+        disabled={loading}
       >
         {photo ? (
           <Image source={{ uri: photo }} style={styles.image} />
@@ -122,16 +155,26 @@ const ProfileImage = ({route }) => {
       {/* Buttons */}
       <TouchableOpacity 
         style={[styles.choosePhotoButton, { backgroundColor: 'white' }]} 
-        onPress={choosePhoto}
+        onPress={HandleWithPhoto}
+        disabled={loading}
       >
-        <Text style={[styles.choosePhotoText, { color: '#4c669f' }]}>Choose a photo</Text>
+        {loading ? (
+          <ActivityIndicator color="#4c669f" />
+        ) : (
+          <Text style={[styles.choosePhotoText, { color: '#4c669f' }]}>Continue</Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity 
         style={[styles.maybeLaterButton, { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }]} 
         onPress={HandleLater}
+        disabled={loading}
       >
-        <Text style={[styles.maybeLaterText, { color: 'white' }]}>Maybe later</Text>
+        {loading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={[styles.maybeLaterText, { color: 'white' }]}>Maybe later</Text>
+        )}
       </TouchableOpacity>
     </LinearGradient>
   );

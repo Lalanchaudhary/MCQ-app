@@ -25,6 +25,7 @@ import AdminDashboard from './Screens/Admin/AdminDashboard';
 import UserList from './Screens/Admin/UserList';
 import TestList from './Screens/Admin/TestList';
 import AddTest from './Screens/Admin/AddTest';
+import EditTest from './Screens/Admin/EditTest';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,7 +58,7 @@ export default function App() {
   return (
     <>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName={!userId ? 'Login' : 'AdminDashboard'}>
+        <Stack.Navigator initialRouteName={!userId ? 'Login' : 'Dashboard'}>
           <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
           <Stack.Screen name="Signup" component={Signup} options={{ headerShown: false }} />
           <Stack.Screen name="AccountSetup" component={AccountSetup} options={{ headerShown: false }} />
@@ -77,6 +78,7 @@ export default function App() {
           <Stack.Screen name="UserList" component={UserList} options={{ headerShown: false }} />
           <Stack.Screen name="TestList" component={TestList} options={{ headerShown: false }} />
           <Stack.Screen name="AddTest" component={AddTest} options={{ headerShown: false }} />
+          <Stack.Screen name="EditTest" component={EditTest} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />

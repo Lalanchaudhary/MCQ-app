@@ -137,10 +137,18 @@ const EditProfile = () => {
           onPress={handleImagePick}
         >
           <View style={styles.imageWrapper}>
-            <Image
-              source={user.image ? { uri: user.image } : require('../../Assets/logo.png')}
-              style={styles.profileImage}
-            />
+          <Image
+      source={
+        user.AuthType === 'EmailWithPassword'
+          ? user.image
+            ? { uri: `http://${Rest_API}:9000/${user.image}` }
+            : require('../../Assets/Profile.png')
+          : user.image
+            ? { uri: user.image }
+            : require('../../Assets/Profile.png')
+      }
+      style={styles.profileImage}
+    />
             <View style={styles.editImageOverlay}>
               <MaterialIcons name="edit" size={24} color="white" />
             </View>

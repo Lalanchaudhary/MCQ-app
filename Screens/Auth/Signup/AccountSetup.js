@@ -24,13 +24,11 @@ const AccountSetup = () => {
     gender: Yup.string().required('Select your gender'),
   });
 
-  const handleDateChange = (event, date) => {
-    setShowDatePicker(false);
-    if (date) {
-      setSelectedDate(date);
-      const formattedDate = date.toLocaleDateString('en-GB');
-      setFieldValue('dob', formattedDate);
-    }
+  const formatDate = (date) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   return (
@@ -85,7 +83,9 @@ const AccountSetup = () => {
                     style={[styles.datePicker, { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }]} 
                     onPress={() => setShowDatePicker(true)}
                   >
-                    <Text style={{ color: values.dob ? "white" : "rgba(255,255,255,0.5)" }}>{values.dob || "DD/MM/YYYY"}</Text>
+                    <Text style={{ color: values.dob ? "white" : "rgba(255,255,255,0.5)" }}>
+                      {values.dob || "DD/MM/YYYY"}
+                    </Text>
                     <MaterialIcons name="calendar-today" size={20} color="rgba(255,255,255,0.7)" />
                   </TouchableOpacity>
                   
@@ -94,7 +94,15 @@ const AccountSetup = () => {
                       value={selectedDate}
                       mode="date"
                       display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                      onChange={handleDateChange}
+                      onChange={(event, date) => {
+                        setShowDatePicker(Platform.OS === 'ios');
+                        if (date) {
+                          setSelectedDate(date);
+                          setFieldValue('dob', formatDate(date));
+                        }
+                      }}
+                      maximumDate={new Date()}
+                      minimumDate={new Date(1900, 0, 1)}
                     />
                   )}
                   {touched.dob && errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}

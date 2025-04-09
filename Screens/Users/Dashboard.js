@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet,ImageBackground, TouchableOpacity, Image, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Image, ScrollView } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import LinearGradient from 'react-native-linear-gradient';
@@ -15,29 +15,55 @@ import Cpp from '../../Assets/C++.png';
 import Ai from '../../Assets/AI.png';
 import Js from '../../Assets/javascript.png';
 import logo from '../../Assets/logo2.png';
-import {ReactNativeQuestions,JavaQuestions,JavaScriptQuestions,AIQuestions,PythonQuestions,CppQuestions} from '../../AllQuestions';
-import { useNavigation } from "@react-navigation/native";
+import { ReactNativeQuestions, JavaQuestions, JavaScriptQuestions, AIQuestions, PythonQuestions, CppQuestions } from '../../AllQuestions';
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Rest_API from '../../Api';
 const Dashboard = () => {
   const [selectedTab, setSelectedTab] = useState("Weekly");
   const [user, setUser] = useState({});
-  const navigation=useNavigation();
+  const navigation = useNavigation();
+  const [tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const courses = [
-    { id: 1, name: "React Native", image: ReactNative, color: "#61DAFB" ,Questions:ReactNativeQuestions},
-    { id: 2, name: "JavaScript", image: Js, color: "#F7DF1E" ,Questions:JavaScriptQuestions},
-    { id: 3, name: "Python", image: Python, color: "#3776AB" ,Questions:PythonQuestions},
-    { id: 4, name: "Java", image: Java, color: "#007396" ,Questions:JavaQuestions},
-    { id: 5, name: "C++", image: Cpp, color: "#00599C" ,Questions:CppQuestions},
-    { id: 6, name: "AI/ML", image: Ai, color: "#FF6B6B" ,Questions:AIQuestions},
+    { id: 1, name: "React Native", image: ReactNative, color: "#61DAFB", Questions: ReactNativeQuestions },
+    { id: 2, name: "JavaScript", image: Js, color: "#F7DF1E", Questions: JavaScriptQuestions },
+    { id: 3, name: "Python", image: Python, color: "#3776AB", Questions: PythonQuestions },
+    { id: 4, name: "Java", image: Java, color: "#007396", Questions: JavaQuestions },
+    { id: 5, name: "C++", image: Cpp, color: "#00599C", Questions: CppQuestions },
+    { id: 6, name: "AI/ML", image: Ai, color: "#FF6B6B", Questions: AIQuestions },
   ];
+
+    // Refresh tests when the screen comes into focus
+  //   useFocusEffect(
+  //     React.useCallback(() => {
+  //       fetchTests();
+  //     }, [])
+  //   );
+
+  // const fetchTests = async () => {
+  //   setLoading(true);
+  //   try {
+  //     // Try to fetch from API first
+  //     const response = await axios.get(`http://${Rest_API}:9000/testroute/alltests`);
+  //     setTests(response.data.data);
+  //     console.log(response.data);
+      
+  //   } catch (error) {
+  //     console.error('Error fetching tests:', error);
+  //     // Try to get from AsyncStorage as fallback
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
 
   const getProfile = async () => {
     const userId = await AsyncStorage.getItem('userId');
     // const userId = parseInt(id, 16)
     console.log('====================================');
-    console.log("profile :",userId);
+    console.log("profile :", userId);
     console.log('====================================');
     if (!userId) {
       console.log('No user ID found');
@@ -108,67 +134,80 @@ const Dashboard = () => {
         style={styles.gradientOverlay}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header with Logo and Profile */}
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Image source={logo} style={styles.logo} />
-          </View>
-          <TouchableOpacity style={styles.profileContainer} onPress={()=>{navigation.navigate('Profile')}}>
-            <Image 
-              source={user.image ? { uri: user.image } : require('../../Assets/Profile.png')} 
-              style={styles.profileImage} 
-            />
-          </TouchableOpacity>
-        </View>
+          {/* Header with Logo and Profile */}
+          <View style={styles.header}>
+  <View style={styles.logoContainer}>
+    <Image source={logo} style={styles.logo} />
+  </View>
 
-        {/* Featured Courses Horizontal Scroll */}
-        <View style={styles.featuredContainer}>
-          <Text style={styles.featuredTitle}>Featured Courses</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.featuredScrollContent}
-          >
-            {featuredCourses.map((course) => (
-              <TouchableOpacity key={course.id} style={styles.featuredCard}>
-                <Image source={{ uri: course.image }} style={styles.featuredImage} />
-                <View style={styles.featuredOverlay}>
-                  <Text style={styles.featuredCardTitle}>{course.title}</Text>
-                  <Text style={styles.featuredCardDescription}>{course.description}</Text>
-                  <View style={styles.featuredStats}>
-                    <View style={styles.featuredStatItem}>
-                      <MaterialIcons name="star" size={16} color="#FFD700" />
-                      <Text style={styles.featuredStatText}>{course.rating}</Text>
-                    </View>
-                    <View style={styles.featuredStatItem}>
-                      <MaterialIcons name="person" size={16} color="white" />
-                      <Text style={styles.featuredStatText}>{course.students}+</Text>
+  <TouchableOpacity
+    style={styles.profileContainer}
+    onPress={() => navigation.navigate('Profile')}
+  >
+    <Image
+      source={
+        user.AuthType === 'EmailWithPassword'
+          ? user.image
+            ? { uri: `http://${Rest_API}:9000/${user.image}` }
+            : require('../../Assets/Profile.png')
+          : user.image
+            ? { uri: user.image }
+            : require('../../Assets/Profile.png')
+      }
+      style={styles.profileImage}
+    />
+  </TouchableOpacity>
+</View>
+
+
+          {/* Featured Courses Horizontal Scroll */}
+          <View style={styles.featuredContainer}>
+            <Text style={styles.featuredTitle}>Featured Courses</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.featuredScrollContent}
+            >
+              {featuredCourses.map((course) => (
+                <TouchableOpacity key={course.id} style={styles.featuredCard}>
+                  <Image source={{ uri: course.image }} style={styles.featuredImage} />
+                  <View style={styles.featuredOverlay}>
+                    <Text style={styles.featuredCardTitle}>{course.title}</Text>
+                    <Text style={styles.featuredCardDescription}>{course.description}</Text>
+                    <View style={styles.featuredStats}>
+                      <View style={styles.featuredStatItem}>
+                        <MaterialIcons name="star" size={16} color="#FFD700" />
+                        <Text style={styles.featuredStatText}>{course.rating}</Text>
+                      </View>
+                      <View style={styles.featuredStatItem}>
+                        <MaterialIcons name="person" size={16} color="white" />
+                        <Text style={styles.featuredStatText}>{course.students}+</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Courses Grid */}
-        <View style={styles.coursesContainer}>
-          <Text style={styles.sectionTitle}>Popular Tests</Text>
-          <View style={styles.coursesGrid}>
-            {courses.map((course) => (
-              <TouchableOpacity key={course.id} style={styles.courseCard} onPress={()=>{navigation.navigate('FirstScreen',{Questions:course.Questions ,name:course.name ,image:course.image})}}>
-                <Image 
-                  source={course.image} 
-                  style={[styles.courseImage]} 
-                  resizeMode="contain"
-                />
-                <Text style={styles.courseName}>{course.name}</Text>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-        </View>
-      </ScrollView>
-    </LinearGradient>
+
+          {/* Courses Grid */}
+          <View style={styles.coursesContainer}>
+            <Text style={styles.sectionTitle}>Popular Tests</Text>
+            <View style={styles.coursesGrid}>
+              {courses.map((course) => (
+                <TouchableOpacity key={course.id} style={styles.courseCard} onPress={() => { navigation.navigate('FirstScreen', { Questions: course.Questions, name: course.name, image: course.image }) }}>
+                  <Image
+                    source={course.image}
+                    style={[styles.courseImage]}
+                    resizeMode="contain"
+                  />
+                  <Text style={styles.courseName}>{course.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+      </LinearGradient>
     </ImageBackground>
   );
 };
@@ -189,7 +228,7 @@ const chartConfig = {
 };
 
 const styles = StyleSheet.create({
-  container: { 
+  container: {
     flex: 1,
   },
   backgroundImage: {
@@ -306,29 +345,29 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
-  buttonGroup: { 
-    flexDirection: "row", 
-    justifyContent: "center", 
+  buttonGroup: {
+    flexDirection: "row",
+    justifyContent: "center",
     marginVertical: hp("1%"),
     marginHorizontal: wp('5%'),
   },
-  tabButton: { 
-    padding: hp("1%"), 
-    marginHorizontal: wp("2%"), 
+  tabButton: {
+    padding: hp("1%"),
+    marginHorizontal: wp("2%"),
     borderRadius: hp("1%"),
     backgroundColor: 'white',
   },
-  activeTab: { 
-    backgroundColor: "#333" 
+  activeTab: {
+    backgroundColor: "#333"
   },
-  activeTabText: { 
-    color: "#fff" 
+  activeTabText: {
+    color: "#fff"
   },
-  tabText: { 
-    color: "#333" 
+  tabText: {
+    color: "#333"
   },
-  chart: { 
-    borderRadius: hp("1%"), 
+  chart: {
+    borderRadius: hp("1%"),
     marginTop: hp("2%"),
     marginHorizontal: wp('5%'),
   },

@@ -29,7 +29,15 @@ const UserList = () => {
   const renderUserItem = ({ item }) => (
     <View style={styles.userCard}>
       <Image
-        source={item.image?{ uri: item.image }:require('../../Assets/Profile.png')}
+              source={
+                item.AuthType === 'EmailWithPassword'
+                  ? item.image
+                    ? { uri: `http://${Rest_API}:9000/${item.image}` }
+                    : require('../../Assets/Profile.png')
+                  : item.image
+                    ? { uri: item.image }
+                    : require('../../Assets/Profile.png')
+              }
         style={styles.userImage}
       />
       <View style={styles.userInfo}>
