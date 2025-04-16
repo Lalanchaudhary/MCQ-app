@@ -1,4 +1,5 @@
-import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Alert, Image, ScrollView } from 'react-native';
+import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View,BackHandler, Alert, Image, ScrollView } from 'react-native';
+import { useFocusEffect ,useCallback } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { RadioButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/AntDesign';
@@ -11,7 +12,6 @@ import RNFS from 'react-native-fs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Rest_API from '../../Api';
-
 // Dummy leaderboard data
 const dummyLeaderboard = [
   { id: 1, name: 'John Doe', score: 95, rank: 1, image: 'https://randomuser.me/api/portraits/men/1.jpg' },
@@ -34,6 +34,25 @@ const Result = ({route, navigation}) => {
       }
     });
   }, []);
+
+//   useFocusEffect(
+//   useCallback(() => {
+//     const onBackPress = () => {
+//       navigation.reset({
+//         index: 0,
+//         routes: [{ name: 'Dashboard' }],
+//       });
+//       return true;
+//     };
+
+//     BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+//     return () => {
+//       BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+//     };
+//   }, [navigation])
+// );
+
 
   const generatePDF = async () => {
     try {
@@ -245,7 +264,6 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingTop:hp('12%')
   },
   summaryContainer: {
     flex: 1,

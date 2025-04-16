@@ -15,9 +15,11 @@ import Config from 'react-native-config';
 import Toast from 'react-native-toast-message';
 import Rest_API from '../../../Api';
 import LinearGradient from 'react-native-linear-gradient';
+import LoaderKit from 'react-native-loader-kit';
 const Login = () => {
   const [identifier, setIdentifier] = useState(''); // Can be email or phone
   const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
   // const Rest_API = Config.Rest_API;
@@ -111,6 +113,7 @@ const Login = () => {
       console.log('First Name:', json.first_name);
       console.log('Last Name:', json.last_name);
       console.log('Profile Picture URL:', json.picture.data.url);
+      setIsLoading(true)
   
       try {
         const res = await axios.post(`http://${Rest_API}:9000/usersroute/signupwithfacebook`, {
@@ -152,7 +155,22 @@ const Login = () => {
         text2: error.message || 'Something went wrong'
       });
     }
+    finally{
+      setIsLoading(false)
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <LoaderKit
+          style={{ width: 50, height: 50 }}
+          name={'BallPulse'}
+          color={'black'}
+        />
+      </View>
+    );
+  }
   
   return (
     <LinearGradient
@@ -218,7 +236,7 @@ const Login = () => {
       {/* Facebook Login */}
       <TouchableOpacity style={[styles.socialButton, { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.2)' }]} onPress={onFacebookButtonPress}>
         <Image source={facebook} style={{ height: hp('5%'), width: wp('7%') }} />
-        <Text style={[styles.socialText, { color: 'white' }]}>Login with Apple</Text>
+        <Text style={[styles.socialText, { color: 'white' }]}>Login with Facebook</Text>
       </TouchableOpacity>
 
       {/* Register */}

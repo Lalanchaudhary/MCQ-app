@@ -6,7 +6,9 @@ import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import Rest_API from '../../Api';
 const QuestionScreen = ({route}) => {
   const {Questions,name} = route.params;
   const navigation = useNavigation();
@@ -58,14 +60,26 @@ const QuestionScreen = ({route}) => {
     setOptionTextArray(newOptionTextArray);
   };
 
-  const handleSubmit = () => {
-    navigation.navigate('ResultScreen', {
-      score: score,
-      arr: arr,
-      optionTextArray: optionTextArray,
-      Questions: Questions,
-      name: name,
-    });
+  const handleSubmit =async () => {
+    try{
+      const userId = await AsyncStorage.getItem('userId');
+      const res=await axios.post(`http://${Rest_API}:9000/LeaderBoardRoute/create`,{
+        testName:name,
+        user:userId,
+        score:score
+      })
+      console.log(res.data);
+      navigation.navigate('ResultScreen', {
+        score: score,
+        arr: arr,
+        optionTextArray: optionTextArray,
+        Questions: Questions,
+        name: name,
+      });
+
+    }catch(err){
+      console.log("error :",err); 
+    }
   };
 
   const minute = Math.floor(time / 60);
